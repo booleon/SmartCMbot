@@ -1,6 +1,6 @@
-#Intern ignore for the bot projetc : 
+#Intern ignore for the bot projetc :
 
-link-Tweeter-account-to-bot/ID-of-robot.txt
+link-Twitter-account-to-bot/ID-of-robot.txt
 
 
 # Created by https://www.gitignore.io/api/python,pycharm
@@ -149,4 +149,3 @@ fabric.properties
 # modules.xml
 # .idea/misc.xml
 # *.ipr
-
