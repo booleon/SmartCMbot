@@ -1,6 +1,7 @@
 #Intern ignore for the bot projetc :
 
 link-Twitter-account-to-bot/ID-of-robot.txt
+echobot/secret.py
 
 
 # Created by https://www.gitignore.io/api/python,pycharm
