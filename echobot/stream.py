@@ -4,10 +4,10 @@ import tweepy
 import json
 
 # Authentication details. To  obtain these visit dev.twitter.com
-consumer_key = '46EKaD26rYQIporc1axXZIKeM'
-consumer_secret = 'u8XADqMVdi7VKPPYKVRwx8leiTI0bQTOQPL5QkJmKFm4PPrWQZ'
-access_token = '806851098258657280-r5SaqdZsd2cBSkr82ggkZOOIoreDxaR'
-access_token_secret = '5HJYxQK4E7CQtrw2lIt9OI4fJS19A9umwlnBHK0UCEKpF'
+consumer_key = C_KEY
+consumer_secret = C_SECRET
+access_token = A_TOKEN
+access_token_secret = A_TOKEN_SECRET
 
 # This is the listener, resposible for receiving data
 class StdOutListener(tweepy.StreamListener):
