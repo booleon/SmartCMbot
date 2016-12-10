@@ -18,11 +18,15 @@ class echobot(tweepy.StreamListener) :
         # Twitter returns data in JSON format - we need to decode it first
         decoded = json.loads(data)
         if decoded['user']['screen_name'] != "SmartParisBot" :
-            self.sendTweet(decoded['text'])
+            #self.sendTweet(decoded['text'])
+            pass
         # Also, we convert UTF-8 to ASCII ignoring all bad characters sent by users
-        print ('@%s: %s' % (decoded['user']['screen_name'], decoded['text'].encode('ascii', 'ignore')))
+        print ('@%s: %s' % (decoded['user']['screen_name'], self.cleanTweettext(decoded['text']).encode('UTF-8', 'ignore')))
         print ('')
         return True
+
+    def cleanTweettext(self,text) :
+        return str(text[2:-1])
 
     def on_error(self, status):
         print (status)
@@ -30,7 +34,7 @@ class echobot(tweepy.StreamListener) :
     def startBot (self) :
         print ("Showing all tweets I will resend :")
         stream = tweepy.Stream(self.auth, self)
-        stream.filter(track=['@SmartParisBot'],async=True)
+        stream.filter(track=['kohlanta'],async=True)
 
 
 if __name__ == "__main__" :
