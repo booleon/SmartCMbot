@@ -3,6 +3,7 @@
 link-Twitter-account-to-bot/ID-of-robot.txt
 echobot/secret.py
 *secret.py
+*/secret.py
 
 # Created by https://www.gitignore.io/api/python,pycharm
 
