@@ -4,6 +4,7 @@ from secret import *
 import tweepy
 import recastai
 import json
+from SparkConnector.sparkConnect import sparkconnector
 
 
 class twitter_bot(tweepy.StreamListener):
@@ -13,6 +14,7 @@ class twitter_bot(tweepy.StreamListener):
         self.auth.set_access_token(A_TOKEN, A_TOKEN_SECRET)
         self.api = tweepy.API(self.auth)
         self.client = recastai.Client(token=R_TOKEN, language='en')
+        self.sparkroom = sparkconnector()
 
     def sendTweet(self, text):
         self.api.update_status(text)
@@ -26,10 +28,12 @@ class twitter_bot(tweepy.StreamListener):
     def on_data(self, data):
         # Twitter returns data in JSON format - we need to decode it first
         decoded = json.loads(data)
-        if decoded['user']['screen_name'] != "SmartParisBot":
-            self.do_somethingsmart(decoded['text'])
+        #if decoded['user']['screen_name'] != "SmartParisBot":
+            #self.do_somethingsmart(decoded['text'])
             # pass
         # Also, we convert UTF-8 to ASCII ignoring all bad characters sent by users
+        self.sparkroom.sendToRoom('@%s: %s' % (decoded['user']['screen_name'],
+                           self.cleanTweettext(decoded['text']).encode('UTF-8', 'ignore')))
         print('@%s: %s' % (decoded['user']['screen_name'],
                            self.cleanTweettext(decoded['text']).encode('UTF-8', 'ignore')))
         print('')
@@ -44,7 +48,7 @@ class twitter_bot(tweepy.StreamListener):
     def startBot(self):
         print("Showing all tweets I will resend :")
         stream = tweepy.Stream(self.auth, self)
-        stream.filter(track=['SmartParisBot'], async=True)
+        stream.filter(track=['FCGBASM'], async=True)
 
 
 if __name__ == "__main__":
