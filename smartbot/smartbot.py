@@ -13,24 +13,31 @@ class twitter_bot(tweepy.StreamListener):
         self.auth = tweepy.OAuthHandler(C_KEY, C_SECRET)
         self.auth.set_access_token(A_TOKEN, A_TOKEN_SECRET)
         self.api = tweepy.API(self.auth)
-        self.client = recastai.Client(token=R_TOKEN, language='en')
         self.sparkroom = sparkconnector()
+        self.currentTopic = {}
 
     def sendTweet(self, text):
         self.api.update_status(text)
 
-    def do_somethingsmart(self, text):
-        response = self.client.text_converse(text)
-        reply = response.reply()
-        print(reply)
-        self.sendTweet(reply)
+    def pushInstanceAndTextToRecast(self,recastInstance, text):
+        return recastInstance.text_converse(text)
+
 
     def on_data(self, data):
         # Twitter returns data in JSON format - we need to decode it first
         decoded = json.loads(data)
-        #if decoded['user']['screen_name'] != "SmartParisBot":
-            #self.do_somethingsmart(decoded['text'])
-            # pass
+        if decoded['user']['screen_name'] != "SmartParisBot":
+            if decoded['user']['screen_name'] in self.currentTopic.keys() :
+                currentInstance = self.currentTopic[decoded['user']['screen_name']]
+                Answer = self.pushInstanceAndTextToRecast(currentInstance,decoded['text'])
+                print(Answer.reply())
+                print(Answer.next_action())
+            else :
+                self.currentTopic[decoded['user']['screen_name']] = recastLink = recastai.Client(token=R_TOKEN, language='fr')
+                currentInstance = self.currentTopic[decoded['user']['screen_name']]
+                Answer = self.pushInstanceAndTextToRecast(currentInstance,decoded['text'])
+                print(Answer.reply())
+                print(Answer.next_action())
         # Also, we convert UTF-8 to ASCII ignoring all bad characters sent by users
         self.sparkroom.sendToRoom('@%s: %s' % (decoded['user']['screen_name'],
                            self.cleanTweettext(decoded['text']).encode('UTF-8', 'ignore')))
@@ -48,7 +55,7 @@ class twitter_bot(tweepy.StreamListener):
     def startBot(self):
         print("Showing all tweets I will resend :")
         stream = tweepy.Stream(self.auth, self)
-        stream.filter(track=['FCGBASM'], async=True)
+        stream.filter(track=['@SmartParisBot'], async=True)
 
 
 if __name__ == "__main__":
