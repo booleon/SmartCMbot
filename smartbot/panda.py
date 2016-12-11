@@ -92,7 +92,7 @@ if __name__ == '__main__':
     (noise_level, is_noisy) = accident.noise_level(
         utils.date("2016-05-01T14:45:07+00:00"), utils.date("2016-05-01T15:00:07+00:00"))
     if is_noisy:
-        print('It is noisy out there! %d Db' % noise_level)
+        print('It is %s out there! %d Db' % ('noisy' if is_noisy else 'calm', noise_level))
 
     ##################COLD####################################################
 
