@@ -96,6 +96,11 @@ class Weather(Panda):
         self.fetch()
         return statistics.mean(self.collect())
 
+    def humidity(self):
+        self.query = {"start": "1h-ago", "m": "sum:breezometer.rh{host=*}"}
+        self.fetch()
+        return statistics.mean(self.collect())
+
 # Main
 ####################################
 if __name__ == '__main__':
@@ -113,6 +118,7 @@ if __name__ == '__main__':
     # Weather
     print('It is %s with %d°C' % ('cold' if weather.temperature()
                                   <= WEATHER_NICE else 'hot', weather.temperature()))
+    print('Relative humidity is of about %d percent' % weather.humidity())
 
     # Accident
     (noise_level, is_noisy) = accident.noise_level(
