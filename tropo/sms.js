@@ -1,4 +1,4 @@
-f (currentCall) {
+if (currentCall) {
     choice = currentCall.initialText.toLowerCase();
     if ((choice.startsWith("echo")) || (choice.startsWith("eco")))  
     {
