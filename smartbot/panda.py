@@ -4,7 +4,6 @@
 ####################################################
 
 import requests
-import dateutil
 import datetime
 import statistics
 
