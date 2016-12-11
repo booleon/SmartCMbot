@@ -38,9 +38,11 @@ class twitter_bot(tweepy.StreamListener):
         if decoded['user']['screen_name'] != "SmartParisBot":
             if decoded['user']['screen_name'] not in self.activUsers.keys() :
                 self.activUsers[decoded['user']['screen_name']] = {}
-                self.sendTweet(self.askRecast(decoded['user']['screen_name'],decoded['text']))
+                self.sendTweet('@' + decoded['user']['screen_name'] + ' ' + self.askRecast(decoded['user']['screen_name'],decoded['text']))
+                print('@' + decoded['user']['screen_name'] + ' ' + self.askRecast(decoded['user']['screen_name'],decoded['text']))
             else :
-                self.sendTweet(self.askRecast(decoded['user']['screen_name'],decoded['text']))
+                self.sendTweet('@' + decoded['user']['screen_name'] + ' ' + self.askRecast(decoded['user']['screen_name'],decoded['text']))
+                print('@' + decoded['user']['screen_name'] + ' ' + self.askRecast(decoded['user']['screen_name'],decoded['text']))
 
                 # self.activUsers[decoded['user']['screen_name']]['data_loc'] = None
                 # self.activUsers[decoded['user']['screen_name']]['data_time'] = None
@@ -56,21 +58,28 @@ class twitter_bot(tweepy.StreamListener):
         loc = self.startGetMyFuckingData(TIME_LOC, text[15:])
         time = loc
 
-        print(hello)
-        if 'slug' in hello['results']['action'].keys() :
+        try :
             self.activUsers[user]['data_hello'] = hello['results']['replies']
-        if topic['results']['keyword']['formated'] != None :
-            self.activUsers[user]['results']['data_topic'] = topic['keyword']['formated']
-        if loc['results']['memory']['location'] != None :
+        except :
+            pass
+        try :
+            self.activUsers[user]['data_topic'] = topic['results']['entities']['keyword'][0]['value']
+        except :
+            pass
+        try :
             self.activUsers[user]['data_loc'] = loc['results']['memory']['location']
-        if time['results']['memory']['timestamp'] != None :
+        except :
+            pass
+        try :
             self.activUsers[user]['data_time'] = loc['results']['memory']['timestamp']
+        except :
+            pass
 
         if 'data_topic' not in self.activUsers[user].keys() :
             if 'data_hello' not in self.activUsers[user].keys() :
                 return "Je n'ai pas compris votre demande"
             else :
-                return hello['replies']
+                return self.activUsers[user]['data_hello'][0]
         elif 'location' in self.activUsers[user].keys() and 'timestamp' in self.activUsers[user].keys() :
             #@Cedric
             pass

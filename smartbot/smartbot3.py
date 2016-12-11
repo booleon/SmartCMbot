@@ -6,7 +6,7 @@ import recastai
 import json
 from SparkConnector.sparkConnect import sparkconnector
 import requests
-
+import panda
 
 class twitter_bot(tweepy.StreamListener):
 
@@ -17,27 +17,16 @@ class twitter_bot(tweepy.StreamListener):
         self.sparkroom = sparkconnector()
         self.currentTopic = {}
         self.recastLink = recastai.Client(token=R_TOKEN, language='fr')
+        self.people = panda.People()
+        self.accident = panda.Accident()
+        self.weather = panda.Weather()
+        self.utils = panda.Utils()
 
     def sendTweet(self, text):
         try :
             self.api.update_status(text)
         except :
             print('last request has been ignored : Duplicate Tweet')
-
-    def startGetMyFuckingData(self, text) :
-        response = requests.post('https://api.recast.ai/v2/converse',
-            json={'text': text,'language': 'fr'},
-            headers={'Authorization': 'Token ' + R_TOKEN})
-        rep = response.text
-        print('pour le plaisir, ce que je récupère : ')
-        print(rep)
-        dico = json.loads(rep)
-        print('pour le plaisir, le dictionnaire : ')
-        print(dico)
-        return dico
-
-    def getMyFuckingData(self, recastaiKey, answerKey) :
-        pass
 
     def pushInstanceAndTextToRecast(self, text, conversationID = None):
         if conversationID is None :
@@ -53,38 +42,27 @@ class twitter_bot(tweepy.StreamListener):
             if decoded['user']['screen_name'] in self.currentTopic.keys() :
                 currentInstance = self.recastLink
                 answer = self.pushInstanceAndTextToRecast(decoded['text'][15:],self.currentTopic[decoded['user']['screen_name']] )
-                print()
-                print('print get_memory')
-                print(answer.get_memory())
-                print()
-                #try :
-                self.getMyFuckingData(R_TOKEN,self.currentTopic[decoded['user']['screen_name']])
-                #except :
-                #    print("hé merde")
+                try :
+                    print('answer : ' + answer.reply())
+                    self.sendTweet('@' + decoded['user']['screen_name'] + " " + answer.reply())
+                except :
+                    location = answer.get_memory('location')
+                    time = answer.get_memory('timestamp')
+                    topic = answer.get_memory('topic')
 
-                if False :
-                    tweet = '@' + decoded['user']['screen_name'] + " " + "On a fini, merci :-)"
-                    self.sendTweet(tweet)
-                    print('answer : ' + tweet)
-                else :
-                    try :
-                        print('answer : ' + answer.reply())
-                        self.sendTweet('@' + decoded['user']['screen_name'] + " " + answer.reply())
-                    except :
-                        self.sendTweet('@' + decoded['user']['screen_name'] + " " + "Je ne peux plus vous répondre pour le moment, désolé.")
+                    if location is not None and time is not None :
+                        self.sendTweet('@' + decoded['user']['screen_name'] + " " + "Il y a " + self.people.)
+                        print(location)
+                        print(time)
+                        print(topic)
+                    else :
+                        self.sendTweet('@' + decoded['user']['screen_name'] + " " + "Je ne peux plus vous répondre pour le moment,  désolé.")
             else :
                 currentInstance = self.recastLink
                 answer = self.pushInstanceAndTextToRecast(decoded['text'][15:])
-                print('test new way of working : ')
-                yolo = self.startGetMyFuckingData(decoded['text'][15:])
-                print('Encore mieux : ')
-                print('')
-                print(yolo['results']['uuid'])
-                print('')
-                self.getMyFuckingData(R_TOKEN, yolo['results']['conversation_token'])
                 self.currentTopic[decoded['user']['screen_name']] = answer.conversation_token
                 if False :
-                    tweet = '@' + decoded['user']['screen_name'] + " " + "On a fini, merci :-)"
+                    tweet = '@' + decoded['user']['screen_name'] + " " + "On a fini,  merci :-)"
                     self.sendTweet(tweet)
                     print('answer : ' + tweet)
                 else :
@@ -93,7 +71,7 @@ class twitter_bot(tweepy.StreamListener):
                         self.sendTweet('@' + decoded['user']['screen_name'] + " " + answer.reply())
                     except :
                         print(answer.get_memory())
-                        self.sendTweet('@' + decoded['user']['screen_name'] + " " + "Je ne peux plus vous répondre pour le moment, désolé.")
+                        self.sendTweet('@' + decoded['user']['screen_name'] + " " + "Je ne  peux plus vous répondre pour le moment, désolé.")
 
         # Also, we convert UTF-8 to ASCII ignoring all bad characters sent by users
         self.sparkroom.sendToRoom('@%s: %s' % (decoded['user']['screen_name'],
