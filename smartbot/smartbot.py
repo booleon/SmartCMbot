@@ -17,7 +17,11 @@ class twitter_bot(tweepy.StreamListener):
         self.currentTopic = {}
 
     def sendTweet(self, text):
-        self.api.update_status(text)
+        try :
+            self.api.update_status(text)
+        except :
+            print('last request has bee ignored : Duplicate Tweet')
+            pass
 
     def pushInstanceAndTextToRecast(self,recastInstance, text):
         return recastInstance.text_converse(text)
@@ -27,17 +31,28 @@ class twitter_bot(tweepy.StreamListener):
         # Twitter returns data in JSON format - we need to decode it first
         decoded = json.loads(data)
         if decoded['user']['screen_name'] != "SmartParisBot":
+            print(decoded['text'])
+            print(decoded['text'][15:])
             if decoded['user']['screen_name'] in self.currentTopic.keys() :
                 currentInstance = self.currentTopic[decoded['user']['screen_name']]
-                Answer = self.pushInstanceAndTextToRecast(currentInstance,decoded['text'])
+                Answer = self.pushInstanceAndTextToRecast(currentInstance,decoded['text'][15:])
                 print(Answer.reply())
                 print(Answer.next_action())
+                try :
+                    self.sendTweet('@' + decoded['user']['screen_name'] + " " + Answer.reply())
+                except :
+                    self.sendTweet('@' + decoded['user']['screen_name'] + " " + "je suis à l'agonie")
             else :
                 self.currentTopic[decoded['user']['screen_name']] = recastLink = recastai.Client(token=R_TOKEN, language='fr')
                 currentInstance = self.currentTopic[decoded['user']['screen_name']]
-                Answer = self.pushInstanceAndTextToRecast(currentInstance,decoded['text'])
+                Answer = self.pushInstanceAndTextToRecast(currentInstance,decoded['text'][15:])
                 print(Answer.reply())
                 print(Answer.next_action())
+                try :
+                    self.sendTweet('@' + decoded['user']['screen_name'] + " " + Answer.reply())
+                except :
+                    self.sendTweet('@' + decoded['user']['screen_name'] + " " + "je suis à l'agonie")
+
         # Also, we convert UTF-8 to ASCII ignoring all bad characters sent by users
         self.sparkroom.sendToRoom('@%s: %s' % (decoded['user']['screen_name'],
                            self.cleanTweettext(decoded['text']).encode('UTF-8', 'ignore')))
