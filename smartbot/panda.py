@@ -101,6 +101,11 @@ class Weather(Panda):
         self.fetch()
         return statistics.mean(self.collect())
 
+    def pression(self):
+        self.query = {"start": "1h-ago", "m": "sum:breezometer.pressure{host=*}"}
+        self.fetch()
+        return statistics.mean(self.collect())
+
 # Main
 ####################################
 if __name__ == '__main__':
@@ -132,5 +137,6 @@ if __name__ == '__main__':
     print('There has been %d bikes passing by Place de la Nation since the beginnning of the hackathon' %
           (accident.bike_count("2016/12/09-18:00:00", "2016/12/11-23:59:59")))
 
-    # Disabled by Paris
-    # print('The mountains, the fresh air, %d is a good number' % weather.fresh_air())
+    print('Quality of air %d points' % weather.fresh_air())
+
+    print('Atmospheric pressure %d Pa' % weather.pression())
