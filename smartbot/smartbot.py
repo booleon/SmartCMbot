@@ -5,6 +5,7 @@ import tweepy
 import recastai
 import json
 from SparkConnector.sparkConnect import sparkconnector
+import requests
 
 
 class twitter_bot(tweepy.StreamListener):
@@ -23,6 +24,18 @@ class twitter_bot(tweepy.StreamListener):
         except :
             print('last request has been ignored : Duplicate Tweet')
 
+    def getMyFuckingData(self, recastaiKey, answerKey) :
+        response = requests.put('https://api.recast.ai/v2/converse',
+            json={'conversation_token': answerKey},
+            headers={'Authorization': 'Token ' + recastaiKey})
+        rep = response.text
+        print('pour le plaisir, ce que je récupère : ')
+        print(rep)
+        dico = json.loads(rep)
+        print('pour le plaisir, le dictionnaire : ')
+        print(dico)
+        return dico
+
     def pushInstanceAndTextToRecast(self, text, conversationID = None):
         if conversationID is None :
             return self.recastLink.text_converse(text)
@@ -37,9 +50,12 @@ class twitter_bot(tweepy.StreamListener):
             if decoded['user']['screen_name'] in self.currentTopic.keys() :
                 currentInstance = self.recastLink
                 answer = self.pushInstanceAndTextToRecast(decoded['text'][15:],self.currentTopic[decoded['user']['screen_name']] )
-                #action = answer.memory
-                #for test in action :
-                #    print(test)
+
+                #try :
+                self.getMyFuckingData(R_TOKEN,self.currentTopic[decoded['user']['screen_name']])
+                #except :
+                #    print("hé merde")
+
                 if False :
                     tweet = '@' + decoded['user']['screen_name'] + " " + "On a fini, merci :-)"
                     self.sendTweet(tweet)
@@ -49,16 +65,11 @@ class twitter_bot(tweepy.StreamListener):
                         print('answer : ' + answer.reply())
                         self.sendTweet('@' + decoded['user']['screen_name'] + " " + answer.reply())
                     except :
-                        print(get_memory('location'))
-                        print(get_memory('timestamp'))
-                        print(get_memory('keyword'))
                         self.sendTweet('@' + decoded['user']['screen_name'] + " " + "Je ne peux plus vous répondre pour le moment, désolé.")
             else :
                 currentInstance = self.recastLink
                 answer = self.pushInstanceAndTextToRecast(decoded['text'][15:])
                 self.currentTopic[decoded['user']['screen_name']] = answer.conversation_token
-                #action = answer.get_memory()
-                #print(action)
                 if False :
                     tweet = '@' + decoded['user']['screen_name'] + " " + "On a fini, merci :-)"
                     self.sendTweet(tweet)
