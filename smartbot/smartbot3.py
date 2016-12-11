@@ -51,7 +51,7 @@ class twitter_bot(tweepy.StreamListener):
                     topic = answer.get_memory('topic')
 
                     if location is not None and time is not None :
-                        self.sendTweet('@' + decoded['user']['screen_name'] + " " + "Il y a " + self.people.)
+                        self.sendTweet('@' + decoded['user']['screen_name'] + " " + "Il y a " + self.people.people_count)
                         print(location)
                         print(time)
                         print(topic)

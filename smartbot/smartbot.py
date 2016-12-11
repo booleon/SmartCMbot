@@ -19,15 +19,15 @@ class twitter_bot(tweepy.StreamListener):
         self.recastLink = recastai.Client(token=R_TOKEN, language='fr')
 
     def sendTweet(self, text):
-        try :
+        try:
             self.api.update_status(text)
-        except :
+        except:
             print('last request has been ignored : Duplicate Tweet')
 
-    def startGetMyFuckingData(self, text) :
+    def startGetMyFuckingData(self, text):
         response = requests.post('https://api.recast.ai/v2/converse',
-            json={'text': text,'language': 'fr'},
-            headers={'Authorization': 'Token ' + R_TOKEN})
+                                 json={'text': text, 'language': 'fr'},
+                                 headers={'Authorization': 'Token ' + R_TOKEN})
         rep = response.text
         print('pour le plaisir, ce que je récupère : ')
         print(rep)
@@ -36,43 +36,55 @@ class twitter_bot(tweepy.StreamListener):
         print(dico)
         return dico
 
-    def getMyFuckingData(self, recastaiKey, answerKey) :
-        pass
+    def getMyFuckingData(self, recastaiKey, answerKey):
+        response = requests.put('https://api.recast.ai/v2/converse',
+                                json={'conversation_token': answerKey},
+                                headers={'Authorization': 'Token ' + recastaiKey})
+        rep = response.text
+        print('pour le plaisir, ce que je récupère : ')
+        print(rep)
+        dico = json.loads(rep)
+        print('pour le plaisir, le dictionnaire : ')
+        print(dico)
+        return dico
 
-    def pushInstanceAndTextToRecast(self, text, conversationID = None):
-        if conversationID is None :
+    def pushInstanceAndTextToRecast(self, text, conversationID=None):
+        if conversationID is None:
+
             return self.recastLink.text_converse(text)
-        else :
-            return self.recastLink.text_converse(text,conversation_token=conversationID)
+        else:
+            return self.recastLink.text_converse(text, conversation_token=conversationID)
 
     def on_data(self, data):
         # Twitter returns data in JSON format - we need to decode it first
         decoded = json.loads(data)
         print('@' + decoded['user']['screen_name'] + ' : ' + decoded['text'])
         if decoded['user']['screen_name'] != "SmartParisBot":
-            if decoded['user']['screen_name'] in self.currentTopic.keys() :
+            if decoded['user']['screen_name'] in self.currentTopic.keys():
                 currentInstance = self.recastLink
-                answer = self.pushInstanceAndTextToRecast(decoded['text'][15:],self.currentTopic[decoded['user']['screen_name']] )
-                print()
-                print('print get_memory')
-                print(answer.get_memory())
-                print()
-                #try :
-                self.getMyFuckingData(R_TOKEN,self.currentTopic[decoded['user']['screen_name']])
-                #except :
+
+                answer = self.pushInstanceAndTextToRecast(decoded['text'][15:], self.currentTopic[
+                                                          decoded['user']['screen_name']])
+
+                # try :
+                self.getMyFuckingData(R_TOKEN, self.currentTopic[decoded['user']['screen_name']])
+                # except :
                 #    print("hé merde")
 
-                if False :
+                if False:
+
                     tweet = '@' + decoded['user']['screen_name'] + " " + "On a fini, merci :-)"
                     self.sendTweet(tweet)
                     print('answer : ' + tweet)
-                else :
-                    try :
+                else:
+                    try:
                         print('answer : ' + answer.reply())
                         self.sendTweet('@' + decoded['user']['screen_name'] + " " + answer.reply())
-                    except :
-                        self.sendTweet('@' + decoded['user']['screen_name'] + " " + "Je ne peux plus vous répondre pour le moment, désolé.")
-            else :
+                    except:
+                        self.sendTweet('@' + decoded['user']['screen_name'] + " " +
+                                       "Je ne peux plus vous répondre pour le moment, désolé.")
+            else:
+
                 currentInstance = self.recastLink
                 answer = self.pushInstanceAndTextToRecast(decoded['text'][15:])
                 print('test new way of working : ')
@@ -83,21 +95,23 @@ class twitter_bot(tweepy.StreamListener):
                 print('')
                 self.getMyFuckingData(R_TOKEN, yolo['results']['conversation_token'])
                 self.currentTopic[decoded['user']['screen_name']] = answer.conversation_token
-                if False :
+                if False:
+
                     tweet = '@' + decoded['user']['screen_name'] + " " + "On a fini, merci :-)"
                     self.sendTweet(tweet)
                     print('answer : ' + tweet)
-                else :
+                else:
                     print('answer : ' + answer.reply())
-                    try :
+                    try:
                         self.sendTweet('@' + decoded['user']['screen_name'] + " " + answer.reply())
-                    except :
+                    except:
                         print(answer.get_memory())
-                        self.sendTweet('@' + decoded['user']['screen_name'] + " " + "Je ne peux plus vous répondre pour le moment, désolé.")
+                        self.sendTweet('@' + decoded['user']['screen_name'] + " " +
+                                       "Je ne peux plus vous répondre pour le moment, désolé.")
 
         # Also, we convert UTF-8 to ASCII ignoring all bad characters sent by users
         self.sparkroom.sendToRoom('@%s: %s' % (decoded['user']['screen_name'],
-                           self.cleanTweettext(decoded['text']).encode('UTF-8', 'ignore')))
+                                               self.cleanTweettext(decoded['text']).encode('UTF-8', 'ignore')))
         print('')
         return True
 

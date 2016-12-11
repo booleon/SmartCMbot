@@ -1,4 +1,7 @@
 #!/usr/bin/python3
+# This piece of shit                               #
+# has been made by Cedric Bonhomme                 #
+####################################################
 
 import requests
 import dateutil
@@ -7,6 +10,9 @@ import statistics
 
 NOISE_LIMIT = 40
 WEATHER_NICE = 20
+
+# Utilitarian
+#########################
 
 
 class Utils():
@@ -17,6 +23,10 @@ class Utils():
     def date(self, timestamp):
         t = timestamp.split('+', 1)[0].replace("T", "")
         return datetime.datetime.strptime(t, "%Y-%m-%d%H:%M:%S").strftime("%Y/%m/%d-%H:%M:%S")
+
+# Get data from Cisco Panda
+# pre-configured infrastructure
+#####################################
 
 
 class Panda():
@@ -86,6 +96,18 @@ class Weather(Panda):
         self.fetch()
         return statistics.mean(self.collect())
 
+    def humidity(self):
+        self.query = {"start": "1h-ago", "m": "sum:breezometer.rh{host=*}"}
+        self.fetch()
+        return statistics.mean(self.collect())
+
+    def pression(self):
+        self.query = {"start": "1h-ago", "m": "sum:breezometer.pressure{host=*}"}
+        self.fetch()
+        return statistics.mean(self.collect())
+
+# Main
+####################################
 if __name__ == '__main__':
 
     people = People()
@@ -93,30 +115,28 @@ if __name__ == '__main__':
     weather = Weather()
     utils = Utils()
 
-    ################PEOPLE####################################################
-
+    # People
     people_total = people.people_count(
         start_time=utils.date("2016-05-01T14:45:07+00:00"), end_time=utils.date("2016-05-01T15:00:07+00:00"))
     print('There has been %d persons on 2016/05/01 in Place de la Nation' % people_total)
 
-    ####################NOISE#################################################
+    # Weather
+    print('It is %s with %d°C' % ('cold' if weather.temperature()
+                                  <= WEATHER_NICE else 'hot', weather.temperature()))
+    print('Relative humidity is of about %d percent' % weather.humidity())
 
+    # Accident
     (noise_level, is_noisy) = accident.noise_level(
         utils.date("2016-05-01T14:45:07+00:00"), utils.date("2016-05-01T15:00:07+00:00"))
     if is_noisy:
         print('It is %s out there! %d Db' % ('noisy' if is_noisy else 'calm', noise_level))
-
-    ##################COLD####################################################
-
-    print('It is %s with %d°C' % ('cold' if weather.temperature()
-                                  <= WEATHER_NICE else 'hot', weather.temperature()))
-
-    #################AIR######################################################
-
-    #print('The mountains, the fresh air, %d is a good number' % weather.fresh_air())
 
     print('There has been %d cars passing by Place de la Nation since the beginnning of the hackathon' %
           (accident.car_count("2016/12/09-18:00:00", "2016/12/11-23:59:59")))
 
     print('There has been %d bikes passing by Place de la Nation since the beginnning of the hackathon' %
           (accident.bike_count("2016/12/09-18:00:00", "2016/12/11-23:59:59")))
+
+    print('Quality of air %d points' % weather.fresh_air())
+
+    print('Atmospheric pressure %d Pa' % weather.pression())

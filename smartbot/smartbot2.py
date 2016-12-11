@@ -42,10 +42,10 @@ class twitter_bot(tweepy.StreamListener):
                 print('@' + decoded['user']['screen_name'] + ' ' + self.askRecast(decoded['user']['screen_name'],decoded['text']))
             else :
                 self.sendTweet('@' + decoded['user']['screen_name'] + ' ' + self.askRecast(decoded['user']['screen_name'],decoded['text']))
-                print('@' + decoded['user']['screen_name'] + ' ' + self.askRecast(decoded['user']['screen_name'],decoded['text']))
 
                 # self.activUsers[decoded['user']['screen_name']]['data_loc'] = None
                 # self.activUsers[decoded['user']['screen_name']]['data_time'] = None
+                print('@' + decoded['user']['screen_name'] + ' ' + self.askRecast(decoded['user']['screen_name'],decoded['text']))
                 # self.activUsers[decoded['user']['screen_name']]['data_topic'] = None
                 # self.activUsers[decoded['user']['screen_name']]['data_transport'] = None
                 # self.activUsers[decoded['user']['screen_name']]['data_hello'] = None
