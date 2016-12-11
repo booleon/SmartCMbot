@@ -67,6 +67,12 @@ class Accident(Panda):
         self.fetch()
         return sum(self.collect())
 
+    def bike_count(self, start_time, end_time):
+        self.query = {"start": start_time, "end": end_time,
+                      "m": "sum:24h-sum-zero:placemeter.bike{host=6188,class=*}"}
+        self.fetch()
+        return sum(self.collect())
+
 
 class Weather(Panda):
 
@@ -107,7 +113,10 @@ if __name__ == '__main__':
 
     #################AIR######################################################
 
-    print('The mountains, the fresh air, %d is a good number' % weather.fresh_air())
+    #print('The mountains, the fresh air, %d is a good number' % weather.fresh_air())
 
     print('There has been %d cars passing by Place de la Nation since the beginnning of the hackathon' %
           (accident.car_count("2016/12/09-18:00:00", "2016/12/11-23:59:59")))
+
+    print('There has been %d bikes passing by Place de la Nation since the beginnning of the hackathon' %
+          (accident.bike_count("2016/12/09-18:00:00", "2016/12/11-23:59:59")))
