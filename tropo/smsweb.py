@@ -4,10 +4,9 @@
 ## Interface SMS <->Tropo <-> Recast.AI
 ## Script by @pedrosimao -10/12/2016
 ################################################################
-
-import requests,json
+import urllib, requests, json
 from itty import *
-from tropo import Tropo, Result, Session
+from tropo import Tropo,Result,Session
 
 ##############
 ## Function adds users infos to Database
@@ -34,11 +33,23 @@ def index(request):
 		res = requests.get('https://api.tropo.com/1.0/sessions?action=create&token=516b787555467055586f63625a754270414e714264506b704c715a6e7578575474545051745a4175676d7177&cNumber=+33685651240&cAnswer=IGotTheEcho')
 	else :
 		userswaiting("+33685651240", initialText, "Place de la Nation 1h18")
-		t.call(to="+33685651240", network = "SMS")
-		t.say("Message sent to DB!")
-		#res = requests.get('https://api.tropo.com/1.0/sessions?action=create&token=516b787555467055586f63625a754270414e714264506b704c715a6e7578575474545051745a4175676d7177&cNumber=+33685651240&cAnswer=SentToDB')
-		response = requests.post('https://api.recast.ai/v2/converse',json={'text': initialText,'language': 'en'},headers={'Authorization': '3da836038be5fb570158829ae76d3aeb'})
-		print(response.text)
+		#t.call(to="+33685651240", network = "SMS")
+		#t.say("Message sent to DB!")
+		url = 'https://api.recast.ai/v2/converse'
+		payload = {'text': initialText,'language': 'fr'}
+		headers = {'Authorization': 'Token 3da836038be5fb570158829ae76d3aeb'}
+		response = requests.post(url, json=payload, headers=headers)
+		#response = requests.post('https://api.recast.ai/v2/converse',json={'text': initialText,'language': 'fr'},headers={'Authorization': 'Token 3da836038be5fb570158829ae76d3aeb'})
+		#In case we get an answer from Recast.AI
+		if response : 
+			# Create a local copy of the json
+			my_json = json.loads(response.text.decode('utf8'))
+			#print all
+			print(my_json["results"]) 
+			#print reply
+			print(my_json["results"]["replies"]) 
+			# Send reply to SMS via API
+			res = requests.get('https://api.tropo.com/1.0/sessions?action=create&token=516b787555467055586f63625a754270414e714264506b704c715a6e7578575474545051745a4175676d7177&cNumber=+33685651240&cAnswer=' + str(my_json["results"]["replies"]))
 
 	return t.RenderJson()
 	# t = Tropo()
