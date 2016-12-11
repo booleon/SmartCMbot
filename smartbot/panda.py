@@ -1,14 +1,35 @@
 #!/usr/bin/python3
+# This piece of shit                               #
+# has been made by Cedric Bonhomme                 #
+####################################################
 
 import requests
 import dateutil
 import datetime
 import statistics
 
-NOISE_LIMIT = 90
+NOISE_LIMIT = 40
+WEATHER_NICE = 20
+
+# Utilitarian
+#########################
 
 
-class panda():
+class Utils():
+
+    def __init__(self):
+        pass
+
+    def date(self, timestamp):
+        t = timestamp.split('+', 1)[0].replace("T", "")
+        return datetime.datetime.strptime(t, "%Y-%m-%d%H:%M:%S").strftime("%Y/%m/%d-%H:%M:%S")
+
+# Get data from Cisco Panda
+# pre-configured infrastructure
+#####################################
+
+
+class Panda():
 
     def __init__(self):
         self.headers = {
@@ -17,23 +38,13 @@ class panda():
             'cache-control': "no-cache",
             'postman-token': "a6649846-07d9-ea05-7216-7a668e48dbff"
         }
-        self.url = "https://173.39.240.235:8444/api/query"
-        self.query = ""
-        self.response = ""
+        self.url = 'https://173.39.240.235:8444/api/query'
+        self.query = ''
+        self.response = ''
 
     def fetch(self):
         self.response = requests.request(
             "GET", self.url, headers=self.headers, params=self.query, verify='cisco.pem')
-
-    # TODO: start_time useless (is end_time - 15min)
-    def people_count(self, start_time, end_time):
-        self.query = {"m": "avg:placemeter.ped{host=6182}",
-                      "start": start_time, "end": end_time}
-        self.fetch()
-        return self.sum_people()
-
-    def sum_people(self):
-        return sum(self.collect())
 
     def collect(self):
         car = []
@@ -42,26 +53,78 @@ class panda():
                 car.append(value)
         return car
 
+
+class People(Panda):
+
+    def people_count(self, start_time, end_time):
+        self.query = {"m": "avg:placemeter.ped{host=6182}",
+                      "start": start_time, "end": end_time}
+        self.fetch()
+        return sum(self.collect())
+
+
+class Accident(Panda):
+
     def noise_level(self, start_time, end_time):
         self.query = {"start": start_time, "end": end_time, "m": "sum:bruitparif.laeq_1mn{host=*}"}
         self.fetch()
-        print('Noise level: %d' % statistics.mean(self.collect()))
+        level = statistics.mean(self.collect())
+        return statistics.mean(self.collect()), level > NOISE_LIMIT
+
+    def car_count(self, start_time, end_time):
+        self.query = {"start": start_time, "end": end_time,
+                      "m": "sum:24h-sum-zero:placemeter.vehicle{host=6188,class=*}"}
+        self.fetch()
+        return sum(self.collect())
+
+    def bike_count(self, start_time, end_time):
+        self.query = {"start": start_time, "end": end_time,
+                      "m": "sum:24h-sum-zero:placemeter.bike{host=6188,class=*}"}
+        self.fetch()
+        return sum(self.collect())
+
+
+class Weather(Panda):
+
+    def temperature(self):
+        self.query = {"start": "1h-ago", "m": "sum:breezometer.temp{host=*}"}
+        self.fetch()
         return statistics.mean(self.collect())
 
-    def is_noisy(self, start_time, end_time):
-        return self.noise_level(start_time, end_time) > NOISE_LIMIT
+    def fresh_air(self):
+        self.query = {"start": "1h-ago", "m": "sum:breezometer.aqi{host=*}"}
+        self.fetch()
+        return statistics.mean(self.collect())
 
+# Main
+####################################
 if __name__ == '__main__':
 
-    # Python is a shit language, it does not even pointers
-    panda = panda()
+    people = People()
+    accident = Accident()
+    weather = Weather()
+    utils = Utils()
 
-    # Please fix this joke of a language TODO: Date is a date
-    people_total = panda.people_count(
-        start_time="2016/05/01-14:45:00", end_time="2016/05/01-15:00:00")
-    print('There are %d persons now in Place de la Nation' % people_total)
+    # People
+    people_total = people.people_count(
+        start_time=utils.date("2016-05-01T14:45:07+00:00"), end_time=utils.date("2016-05-01T15:00:07+00:00"))
+    print('There has been %d persons on 2016/05/01 in Place de la Nation' % people_total)
 
-    ####################NOISE#################################################
-    if panda.is_noisy("2016/05/01-14:45:00", "2016/05/01-15:00:00"):
-        print('It is noisy out there!')
-    ##########################################################################
+    # Weather
+    print('It is %s with %d°C' % ('cold' if weather.temperature()
+                                  <= WEATHER_NICE else 'hot', weather.temperature()))
+
+    # Accident
+    (noise_level, is_noisy) = accident.noise_level(
+        utils.date("2016-05-01T14:45:07+00:00"), utils.date("2016-05-01T15:00:07+00:00"))
+    if is_noisy:
+        print('It is %s out there! %d Db' % ('noisy' if is_noisy else 'calm', noise_level))
+
+    print('There has been %d cars passing by Place de la Nation since the beginnning of the hackathon' %
+          (accident.car_count("2016/12/09-18:00:00", "2016/12/11-23:59:59")))
+
+    print('There has been %d bikes passing by Place de la Nation since the beginnning of the hackathon' %
+          (accident.bike_count("2016/12/09-18:00:00", "2016/12/11-23:59:59")))
+
+    # Disabled by Paris
+    # print('The mountains, the fresh air, %d is a good number' % weather.fresh_air())
