@@ -9,7 +9,7 @@ NOISE_LIMIT = 40
 WEATHER_NICE = 20
 
 
-class utils():
+class Utils():
 
     def __init__(self):
         pass
@@ -19,7 +19,7 @@ class utils():
         return datetime.datetime.strptime(t, "%Y-%m-%d%H:%M:%S").strftime("%Y/%m/%d-%H:%M:%S")
 
 
-class panda():
+class Panda():
 
     def __init__(self):
         self.headers = {
@@ -36,12 +36,6 @@ class panda():
         self.response = requests.request(
             "GET", self.url, headers=self.headers, params=self.query, verify='cisco.pem')
 
-    def people_count(self, start_time, end_time):
-        self.query = {"m": "avg:placemeter.ped{host=6182}",
-                      "start": start_time, "end": end_time}
-        self.fetch()
-        return sum(self.collect())
-
     def collect(self):
         car = []
         for cdr in self.response.json():
@@ -49,11 +43,26 @@ class panda():
                 car.append(value)
         return car
 
+
+class People(Panda):
+
+    def people_count(self, start_time, end_time):
+        self.query = {"m": "avg:placemeter.ped{host=6182}",
+                      "start": start_time, "end": end_time}
+        self.fetch()
+        return sum(self.collect())
+
+
+class Accident(Panda):
+
     def noise_level(self, start_time, end_time):
         self.query = {"start": start_time, "end": end_time, "m": "sum:bruitparif.laeq_1mn{host=*}"}
         self.fetch()
         level = statistics.mean(self.collect())
         return statistics.mean(self.collect()), level > NOISE_LIMIT
+
+
+class Weather(Panda):
 
     def temperature(self):
         self.query = {"start": "1h-ago", "m": "sum:breezometer.temp{host=*}"}
@@ -67,29 +76,29 @@ class panda():
 
 if __name__ == '__main__':
 
-    # Python is a shit language, it does not even pointers
-    panda = panda()
-    utils = utils()
+    people = People()
+    accident = Accident()
+    weather = Weather()
+    utils = Utils()
 
-    # Please fix this joke of a language TODO: Date is a date
     ################PEOPLE####################################################
 
-    people_total = panda.people_count(
+    people_total = people.people_count(
         start_time=utils.date("2016-05-01T14:45:07+00:00"), end_time=utils.date("2016-05-01T15:00:07+00:00"))
     print('There has been %d persons on 2016/05/01 in Place de la Nation' % people_total)
 
     ####################NOISE#################################################
 
-    (noise_level, is_noisy) = panda.noise_level(
+    (noise_level, is_noisy) = accident.noise_level(
         utils.date("2016-05-01T14:45:07+00:00"), utils.date("2016-05-01T15:00:07+00:00"))
     if is_noisy:
         print('It is noisy out there! %d Db' % noise_level)
 
     ##################COLD####################################################
 
-    print('It is %s with %d°C' % ('cold' if panda.temperature()
-                                  <= WEATHER_NICE else 'hot', panda.temperature()))
+    print('It is %s with %d°C' % ('cold' if weather.temperature()
+                                  <= WEATHER_NICE else 'hot', weather.temperature()))
 
     #################AIR######################################################
 
-    print('The mountains, the fresh air, %d is a good number' % panda.fresh_air())
+    print('The mountains, the fresh air, %d is a good number' % weather.fresh_air())
