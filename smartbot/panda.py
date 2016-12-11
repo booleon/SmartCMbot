@@ -6,6 +6,7 @@ import datetime
 import statistics
 
 NOISE_LIMIT = 40
+WEATHER_NICE = 20
 
 
 class panda():
@@ -17,9 +18,9 @@ class panda():
             'cache-control': "no-cache",
             'postman-token': "a6649846-07d9-ea05-7216-7a668e48dbff"
         }
-        self.url = "https://173.39.240.235:8444/api/query"
-        self.query = ""
-        self.response = ""
+        self.url = 'https://173.39.240.235:8444/api/query'
+        self.query = ''
+        self.response = ''
 
     def fetch(self):
         self.response = requests.request(
@@ -45,7 +46,7 @@ class panda():
         level = statistics.mean(self.collect())
         return statistics.mean(self.collect()), level > NOISE_LIMIT
 
-    def i_am_cold(self):
+    def temperature(self):
         self.query = {"start": "1h-ago", "m": "sum:breezometer.temp{host=*}"}
         self.fetch()
         return statistics.mean(self.collect())
@@ -66,4 +67,5 @@ if __name__ == '__main__':
         print('It is noisy out there! %d Db' % noise_level)
     ##########################################################################
 
-    print('It is cold yes %d °C' % panda.i_am_cold())
+    print('It is %s with %d°C' % ('cold' if panda.temperature()
+                                  <= WEATHER_NICE else 'hot', panda.temperature()))
