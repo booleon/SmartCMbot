@@ -5,7 +5,7 @@ import dateutil
 import datetime
 import statistics
 
-NOISE_LIMIT = 90
+NOISE_LIMIT = 40
 
 
 class panda():
@@ -30,9 +30,6 @@ class panda():
         self.query = {"m": "avg:placemeter.ped{host=6182}",
                       "start": start_time, "end": end_time}
         self.fetch()
-        return self.sum_people()
-
-    def sum_people(self):
         return sum(self.collect())
 
     def collect(self):
@@ -45,11 +42,13 @@ class panda():
     def noise_level(self, start_time, end_time):
         self.query = {"start": start_time, "end": end_time, "m": "sum:bruitparif.laeq_1mn{host=*}"}
         self.fetch()
-        print('Noise level: %d' % statistics.mean(self.collect()))
-        return statistics.mean(self.collect())
+        level = statistics.mean(self.collect())
+        return statistics.mean(self.collect()), level > NOISE_LIMIT
 
-    def is_noisy(self, start_time, end_time):
-        return self.noise_level(start_time, end_time) > NOISE_LIMIT
+    def i_am_cold(self):
+        self.query = {"start": "1h-ago", "m": "sum:breezometer.temp{host=*}"}
+        self.fetch()
+        return statistics.mean(self.collect())
 
 if __name__ == '__main__':
 
@@ -59,9 +58,12 @@ if __name__ == '__main__':
     # Please fix this joke of a language TODO: Date is a date
     people_total = panda.people_count(
         start_time="2016/05/01-14:45:00", end_time="2016/05/01-15:00:00")
-    print('There are %d persons now in Place de la Nation' % people_total)
+    print('There has been %d persons on 2016/05/01 in Place de la Nation' % people_total)
 
     ####################NOISE#################################################
-    if panda.is_noisy("2016/05/01-14:45:00", "2016/05/01-15:00:00"):
-        print('It is noisy out there!')
+    (noise_level, is_noisy) = panda.noise_level("2016/05/01-14:45:00", "2016/05/01-15:00:00")
+    if is_noisy:
+        print('It is noisy out there! %d Db' % noise_level)
     ##########################################################################
+
+    print('It is cold yes %d °C' % panda.i_am_cold())
