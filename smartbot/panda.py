@@ -9,6 +9,16 @@ NOISE_LIMIT = 40
 WEATHER_NICE = 20
 
 
+class utils():
+
+    def __init__(self):
+        pass
+
+    def date(self, timestamp):
+        t = timestamp.split('+', 1)[0].replace("T", "")
+        return datetime.datetime.strptime(t, "%Y-%m-%d%H:%M:%S").strftime("%Y/%m/%d-%H:%M:%S")
+
+
 class panda():
 
     def __init__(self):
@@ -26,7 +36,6 @@ class panda():
         self.response = requests.request(
             "GET", self.url, headers=self.headers, params=self.query, verify='cisco.pem')
 
-    # TODO: start_time useless (is end_time - 15min)
     def people_count(self, start_time, end_time):
         self.query = {"m": "avg:placemeter.ped{host=6182}",
                       "start": start_time, "end": end_time}
@@ -51,21 +60,36 @@ class panda():
         self.fetch()
         return statistics.mean(self.collect())
 
+    def fresh_air(self):
+        self.query = {"start": "1h-ago", "m": "sum:breezometer.aqi{host=*}"}
+        self.fetch()
+        return statistics.mean(self.collect())
+
 if __name__ == '__main__':
 
     # Python is a shit language, it does not even pointers
     panda = panda()
+    utils = utils()
 
     # Please fix this joke of a language TODO: Date is a date
+    ################PEOPLE####################################################
+
     people_total = panda.people_count(
-        start_time="2016/05/01-14:45:00", end_time="2016/05/01-15:00:00")
+        start_time=utils.date("2016-05-01T14:45:07+00:00"), end_time=utils.date("2016-05-01T15:00:07+00:00"))
     print('There has been %d persons on 2016/05/01 in Place de la Nation' % people_total)
 
     ####################NOISE#################################################
-    (noise_level, is_noisy) = panda.noise_level("2016/05/01-14:45:00", "2016/05/01-15:00:00")
+
+    (noise_level, is_noisy) = panda.noise_level(
+        utils.date("2016-05-01T14:45:07+00:00"), utils.date("2016-05-01T15:00:07+00:00"))
     if is_noisy:
         print('It is noisy out there! %d Db' % noise_level)
-    ##########################################################################
+
+    ##################COLD####################################################
 
     print('It is %s with %d°C' % ('cold' if panda.temperature()
                                   <= WEATHER_NICE else 'hot', panda.temperature()))
+
+    #################AIR######################################################
+
+    print('The mountains, the fresh air, %d is a good number' % panda.fresh_air())
