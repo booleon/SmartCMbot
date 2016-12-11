@@ -24,6 +24,18 @@ class twitter_bot(tweepy.StreamListener):
         except :
             print('last request has been ignored : Duplicate Tweet')
 
+    def startGetMyFuckingData(self, text) :
+        response = requests.post('https://api.recast.ai/v2/converse',
+            json={'text': text,'language': 'fr'},
+            headers={'Authorization': 'Token ' + R_TOKEN})
+        rep = response.text
+        print('pour le plaisir, ce que je récupère : ')
+        print(rep)
+        dico = json.loads(rep)
+        print('pour le plaisir, le dictionnaire : ')
+        print(dico)
+        return dico
+
     def getMyFuckingData(self, recastaiKey, answerKey) :
         response = requests.put('https://api.recast.ai/v2/converse',
             json={'conversation_token': answerKey},
@@ -69,6 +81,13 @@ class twitter_bot(tweepy.StreamListener):
             else :
                 currentInstance = self.recastLink
                 answer = self.pushInstanceAndTextToRecast(decoded['text'][15:])
+                print('test new way of working : ')
+                yolo = self.startGetMyFuckingData(decoded['text'][15:])
+                print('Encore mieux : ')
+                print('')
+                print(yolo['results']['uuid'])
+                print('')
+                self.getMyFuckingData(R_TOKEN, yolo['results']['conversation_token'])
                 self.currentTopic[decoded['user']['screen_name']] = answer.conversation_token
                 if False :
                     tweet = '@' + decoded['user']['screen_name'] + " " + "On a fini, merci :-)"
